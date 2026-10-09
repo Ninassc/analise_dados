@@ -110,4 +110,68 @@ itens_selecionados = st.multiselect(
 if itens_selecionados:
     st.subheader("Itens Selecionados:")
     for item in itens_selecionados:
-        st.write(f"{item}")
+        st.write(f"{item}: R$ {precos_itens[item]}")
+
+    total_compra = calcular_preco_total(itens_selecionados)
+
+    st.divider()
+    st.metric(label="Total da Compra", value=f"$ {total_compra:.2f}")
+
+    st.divider()
+    #st.subheader("Pagamento e Troco")
+
+    st.subheader("Método de Pagamento: ")
+
+    metodos = ["Dinheiro", "Cartão de Crédito","Pix"]
+    metodo_selecionado = st.selectbox(
+        label="Selecione o método de pagamento",
+        options=list(metodos)
+    )
+
+    col1, col2 = st.columns(2)
+
+    if metodo_selecionado == "Dinheiro":
+        with col1:
+            valor_pago = st.number_input(
+                "Dinheiro entregue (R$)",
+                value=0.0,
+                step=1.0
+            )
+
+        with col2:
+            st.write("")
+            st.write("")
+            botao_calcular = st.button("Calcular Troco", type="primary")
+
+        if botao_calcular:
+            if valor_pago >= total_compra:
+                troco = valor_pago - total_compra
+                st.success(f"**Troco a devolver:** R${troco:.2f}")
+            else:
+                st.error("Erro: O valor pago é menor que o total da compra")
+
+        else:
+            st.info("Nenhum item selecionado. Marque os produtos acima para ver o valor total")
+
+    if metodo_selecionado == "Cartão de Crédito":
+        with col1:
+            saldo = st.number_input(
+                "Saldo (R$)",
+                value=0.0,
+                step=1.0
+            )
+
+        with col2:
+            st.write("")
+            st.write("")
+            botao_calcular = st.button("Pagar", type="primary")
+
+        if botao_calcular:
+            if saldo >= total_compra:
+                saldo = total_compra - saldo
+                st.success(f"Pagamento Realzado. Novo saldo: R${saldo}")
+            else:
+                st.error("Erro: O saldo é menor que o total da compra")
+        
+        else:
+            st.info("Nenhum item selecionado. Marque os produtos acima para ver o valor total")
