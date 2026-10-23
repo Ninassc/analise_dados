@@ -23,7 +23,7 @@ def carregar_dados(caminho_arquivo):
         df_ano.columns = ["Localidade", 'Total', 'Homem', 'Mulher']
 
         df_ano = df_ano.dropna(subset=['Localidade'])
-        df_ano - df_ano[df_ano['Localidade'].astype(str).str.strip() != '']
+        df_ano = df_ano[df_ano['Localidade'].astype(str).str.strip() != '']
 
         for col in ['Total', 'Homem', 'Mulher']:
             df_ano[col] = pd.to_numeric(df_ano[col], errors='coerce')
@@ -34,7 +34,7 @@ def carregar_dados(caminho_arquivo):
     df_completo = pd.concat(dados_totais, ignore_index=True)
     return df_completo
 
-caminho_arquivo = r'H:\Python\exemplo\Tabela 1.1.2.xls'
+caminho_arquivo = r'H:\Python\analise_dados\exemplo\Tabela 1.1.2.xls'
 
 try:
     df = carregar_dados(caminho_arquivo)
@@ -60,6 +60,57 @@ try:
     df_filtrado = df[(df["Ano"] == ano_selecionado) & (df["Localidade"].isin(localidades_selecionadas))]
 
     if not df_filtrado.empty:
+        st.subheader(f"📊 Dados em Tabela ({ano_selecionado})")
+        st.dataframe(df_filtrado[["Localidade", "Total", "Homem", "Mulher"]].reset_index(drop=True), use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("📈 Gráficos Comparativos")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            #Gráfico de Barras comparativos homens e mulheres
+
+            df_melted = df_filtrado.melt(
+                id_vars=["Localidade"],
+                value_vars=['Homem', 'Mulher'],
+                var_name='Sexo',
+                value_name='Horas Semanais'
+            )
+
+            fig_bar = px.bar(
+                df_melted,
+                x='Localidade',
+                y='Horas Semanais',
+                color='Sexo',
+                barmode='group',
+                title=f'Média de Horas por sexo ({ano_selecionado})',
+                color_discrete_sequence=['#1f77b4', '#e377c2'],
+                labels={'Horas Semanais' : 'Horas/Semana', 'Localidade': 'Região / UF'}
+            )
+
+            st.plotly_chart(fig_bar, use_container_width=True)
+
         
-except:
+        with col2:
+            df_historico = df[df['Localidade'].isin(localidades_selecionadas)]
+
+            fig_line = px.line(
+                df_historico,
+                x='Ano',
+                y='Total',
+                color='Localidade',
+                markers=True,
+                title="Evolução Temporal do Total de Horas Dedicadas",
+                labels={'Total' : 'Horas/Semana', 'Ano':'Ano'}
+            )
+
+            st.plotly_chart(fig_line, use_container_width=True)
+
+    else:
+        st.warning("Nenhuma localidade selecionada nos filtros da barra lateral")  
+
+except Exception as e:
+    st.error(f"Erro ao carregar o arquivo: {e}'")
+    st.info(f"Certifique-se de que o arquivo 'Tabela 1.1.2' está no mesmo diretório do script")
 
